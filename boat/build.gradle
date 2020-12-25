@@ -1,25 +1,27 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 30
     buildToolsVersion '30.0.2'
-    ndkVersion '16.1.4479499'
+    ndkVersion '21.3.6528147'
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 21
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0"
+
         externalNativeBuild {
             cmake {
                 abiFilters "armeabi-v7a", "arm64-v8a"
             }
         }
     }
-    lintOptions{
-        checkReleaseBuilds false
-        abortOnError false
-    }  
+
+    buildFeatures {
+        viewBinding true
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -32,13 +34,15 @@ android {
             path file('src/main/jni/CMakeLists.txt')
         }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.code.gson:gson:2.8.6'
-    implementation project(path: ':gamecontroller')
-    implementation project(path: ':jndcrash')
-    implementation project(path: ':definitions')
 }
