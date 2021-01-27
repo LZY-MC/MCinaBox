@@ -47,8 +47,6 @@ public class OnscreenTouchpad implements OnscreenInput, KeyMap, MouseMap {
     private Button touchpad;
     private int touchpadMode = TOUCHPAD_MODE_POINT;
     private int inputSpeedLevel = 0; //-5 ~ 10 || 减少50% ~  增加100%
-    private int screenWidth;
-    private int screenHeight;
     private OnscreenTouchpadConfigDialog configDialog;
     private boolean enable;
     private int cursorDownPosX;
@@ -57,6 +55,8 @@ public class OnscreenTouchpad implements OnscreenInput, KeyMap, MouseMap {
     private boolean performClick;
     private boolean hasPerformLeftClick;
     private long cursorDownTime;
+    private int posX;
+    private int posY;
 
     @Override
     public boolean load(Context context, Controller controller) {
@@ -64,11 +64,8 @@ public class OnscreenTouchpad implements OnscreenInput, KeyMap, MouseMap {
         this.mContext = context;
         this.mController = controller;
 
-        screenWidth = context.getResources().getDisplayMetrics().widthPixels;
-        screenHeight = context.getResources().getDisplayMetrics().heightPixels;
-
         onscreenTouchpad = (LinearLayout) LayoutInflater.from(mContext).inflate(R.layout.virtual_touchpad, null);
-        mController.addContentView(onscreenTouchpad, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        mController.addContentView(onscreenTouchpad, new ViewGroup.LayoutParams(mController.getConfig().getScreenWidth(), mController.getConfig().getScreenHeight()));
         touchpad = onscreenTouchpad.findViewById(R.id.touchpad_button);
 
         touchpad.setOnTouchListener(this);
@@ -102,24 +99,37 @@ public class OnscreenTouchpad implements OnscreenInput, KeyMap, MouseMap {
     private int initX = 0;
     private int initY = 0;
     private void locateCursor(MotionEvent event) {
-        switch (touchpadMode) {
-            case TOUCHPAD_MODE_POINT:
-                sendPointer((int) event.getX(), (int) event.getY(), type_2);
-                break;
-            case TOUCHPAD_MODE_SLIDE:
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_UP:
-                    case MotionEvent.ACTION_MOVE:
-                        sendPointer((int) ((event.getX() - initX) * (1 + inputSpeedLevel * 0.1f)), (int) ((event.getY() - initY) * (1 + inputSpeedLevel * 0.1f)), type_3);
-                        break;
-                    default:
-                        break;
-                }
-                initX = (int) event.getX();
-                initY = (int) event.getY();
-                break;
-            default:
-                break;
+        if(mController.isGrabbed()){
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_MOVE:
+                    sendPointer((int) ((event.getX() - initX) * (1 + inputSpeedLevel * 0.1f)), (int) ((event.getY() - initY) * (1 + inputSpeedLevel * 0.1f)), type_3);
+                    break;
+                default:
+                    break;
+            }
+            initX = (int) event.getX();
+            initY = (int) event.getY();
+        }else{
+            switch (touchpadMode) {
+                case TOUCHPAD_MODE_POINT:
+                    sendPointer((int) event.getX(), (int) event.getY(), type_2);
+                    break;
+                case TOUCHPAD_MODE_SLIDE:
+                    switch (event.getAction()) {
+                        case MotionEvent.ACTION_UP:
+                        case MotionEvent.ACTION_MOVE:
+                            sendPointer((int) ((event.getX() - initX) * (1 + inputSpeedLevel * 0.1f)), (int) ((event.getY() - initY) * (1 + inputSpeedLevel * 0.1f)), type_3);
+                            break;
+                        default:
+                            break;
+                    }
+                    initX = (int) event.getX();
+                    initY = (int) event.getY();
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -223,7 +233,7 @@ public class OnscreenTouchpad implements OnscreenInput, KeyMap, MouseMap {
 
     @Override
     public float[] getPos() {
-        return (new float[]{touchpad.getX(), touchpad.getY()});
+        return (new float[]{posX, posY});
     }
 
     @Override
@@ -231,6 +241,8 @@ public class OnscreenTouchpad implements OnscreenInput, KeyMap, MouseMap {
         ViewGroup.LayoutParams p = touchpad.getLayoutParams();
         ((ViewGroup.MarginLayoutParams) p).setMargins(left, top, 0, 0);
         touchpad.setLayoutParams(p);
+        this.posX = left;
+        this.posY = top;
     }
 
     @Override

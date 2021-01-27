@@ -75,12 +75,15 @@ public class InstallVersionUI extends BaseUI implements RadioGroup.OnCheckedChan
     }
 
     @Override
-    public void setUIVisiability(int visiability) {
-        layout_installversion.setVisibility(visiability);
+    public void setUIVisibility(int visibility) {
+        if(visibility == View.VISIBLE){
+            buttonRefresh.performClick();
+        }
+        layout_installversion.setVisibility(visibility);
     }
 
     @Override
-    public int getUIVisiability() {
+    public int getUIVisibility() {
         return layout_installversion.getVisibility();
     }
 
